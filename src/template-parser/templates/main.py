@@ -141,7 +141,7 @@ def filter_history_templates(history_template_content):
     replacement = '-'
     
     for param in params:
-        replacement = replacement + str(param.value) + '. '
+        replacement = replacement + str(param.value)
         
     return replacement
 
@@ -299,7 +299,10 @@ def filter_infobox_templates(infobox_templates):
         key = str(parameter.name).strip()
         value = str(parameter.value).strip()
         
-        message = message + f"{key}={value}\n"
+        if len(value) == 0: 
+            message = message + f"{key},\n"
+        else:
+            message = message + f"{key}" + ":" + " {" + f"{value}" + "}\n"
     
     message = message + '}' 
 
@@ -314,7 +317,7 @@ def sanitizeTemplates(text:str):
     for template in templates:
         
         template_name = sanitizeTemplateName( str(template.name) )
-        print(f"Sanitizing {template_name} template")
+        logger.info(f"Sanitizing {template_name} template")
         
         match(template_name):
             
@@ -323,7 +326,7 @@ def sanitizeTemplates(text:str):
             
             case 'Choice' | 'choice':
                 replacement = filterChoiceTemplates(template)  
-            
+       
             case 'Collections Artifact'|'Collections Artifacts'|'Collections Cooking'|'Collections Fish'| 'Collections Item Shipped'|'Collection Minerals':
                 replacement = filter_collections_template(template)
                     
@@ -363,7 +366,7 @@ def sanitizeTemplates(text:str):
             case 'NPC':
                 replacement = filter_npc_template(template)      
                 
-            case 'Price' | 'price':
+            case 'Price' | 'price' | 'tprice':
                 replacement = filter_price_template(template)
             
             case 'Probability'|'probability':
@@ -385,19 +388,20 @@ def sanitizeTemplates(text:str):
                 
             case 'Season' | 'season':
                 replacement = filter_season_template(template)
-                print(replacement)
+                logger.info(replacement)
                 
             case 'Weather inline':
                 replacement = filter_weather_template(template)
             
-            case 'collapse':
+            case 'collapse' | 'Collapse':
                 replacement = filter_collapse_template(template)
             
-            case 'Basics-top'|'calendar'|'Categoryheader'| 'clear'| 'for' | 'GiftHeader' | 'giftHeader' | 'InfoboxSEO' | 'KegProductivity-top' | 'Main article' | 'MainLinks' | 'Mainmenu' | 'Mainonly' | 'map' | 'Map' | 'PreservesJarProductivity-top' :
+            case 'Basics-top'|'calendar'|'Categoryheader'| 'clear'| 'clear' | 'for' | 'GiftHeader' | 'giftHeader' | 'InfoboxSEO' | 'KegProductivity-top' | 'Main article' | 'MainLinks' | 'Mainmenu' | 'Mainonly' | 'map' | 'Map' | 'PreservesJarProductivity-top' :
                 replacement = remove_template(template)
             
             case _ :
-                print(f"Not replacing {template_name} template")
+                replacement = ''
+                logger.info(f"Not replacing {template_name} template")
                 
                 
         text = text.replace(str(template), replacement)
@@ -406,43 +410,39 @@ def sanitizeTemplates(text:str):
 
 
 if __name__ == "__main__":
-    path = os.getcwd() + '/info/'
+    
+   
+    path = 'src/info-extractor/info/'
 
     files = os.listdir(path)
 
-    # logger = logging.getLogger(__name__)
-    # logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
-    #                     handlers= [
-    #                         logging.FileHandler("template.log"),
-    #                         logging.StreamHandler(sys.stdout)
-    #                     ])
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(filename='logs.txt',
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.DEBUG)
 
+    replacementText = ''
+ 
     for file in files:
-        filePath = 'info/' + file
-        outputFilePath = 'outputs/' + file
+        filePath = path + file
+        outputFilePath = 'src/template-parser/templates/outputs/' + file
         with open(filePath,"r") as file:
             text = file.read()
-            print(f"Processing {filePath}, length={len(text)=}")
+            logger.info(f"Processing {filePath}, length={len(text)=}")
             replacementText = sanitizeTemplates(text)
             
                 
         with open(outputFilePath,'w') as outputFile:
             outputFile.write(replacementText)
-            print(f"output file generated' {outputFilePath}  {len(replacementText)=}")        
-            print('----------------------------------------------------------------------------')  
+            logger.info(f"output file generated' {outputFilePath}  {len(replacementText)=}")        
+            logger.info('----------------------------------------------------------------------------')  
        
     
 
 
-# replacementText = ''
-# with open("info/Armored Bug.txt","r") as file:
-#     text = file.read()
-#      # print(text)
-#     replacementText =  sanitizeTemplates(text)
-
-# with open('outputs/Peepee.txt','w') as outputFile:
-#     outputFile.write(replacementText)
-#     print('output file generated',  f'{len(replacementText)=}')     
+    
     
      
 

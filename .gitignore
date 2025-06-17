@@ -1,6 +1,8 @@
-info-extractor/info
+src/info-extractor/info
 
-__pycache__
+src/template-parser/templates/outputs/
+
+logs.txt
 
 venv/
 
